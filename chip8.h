@@ -6,6 +6,9 @@
 
 #define FONT_SET_SIZE 80
 #define FONT_SET_ADDRESS 0x50
+#define RAM_SIZE 0x1000
+#define ROM_START_ADDRESS 0x200
+#define MAX_ROM_SIZE (RAM_SIZE - ROM_START_ADDRESS)
 
 #define nnn(x) ((x) & 0x0FFF)   // addr
 #define nn(x) ((x) & 0x00FF)    // kk(x) for some. (lowest 8 bit of the instruction)
@@ -15,7 +18,7 @@
 
 // specs
 typedef struct chip8_t {
-    uint8_t mem[4096];
+    uint8_t mem[RAM_SIZE];
     uint8_t V[16]; // Vx registers (x = 0 to F)
     uint16_t I;
     uint16_t PC;
