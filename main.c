@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "chip8.h"
 #include <raylib.h>
+#include "chip8.h"
+#include "gui.h"
 
 int main(int argc, char **argv)
 {
@@ -15,18 +16,26 @@ int main(int argc, char **argv)
     // printf("bruh: nnn -> %x\n", *my_short & 0x0FFF);
     // printf("&x: %p\n", &x);
     // return 0;
-    const int height = 600;
-    const int width = 860;
+    const int height = 720;
+    const int width = 1280;
     InitWindow(width, height, "Chip8 Testing");
 
     chip8_t chip8 = {0};
     chip8_init(&chip8);
+    printf("chip8 initialized\n");
     chip8_load_rom(&chip8, argv[1]);
+    printf("loaded rom: %s\n", argv[1]);
     
     while (!WindowShouldClose()) {
+        // double dt = GetFrameTime();
         // update var here
+        chip8_step(&chip8);
         BeginDrawing();
-        ClearBackground(WHITE);
+        if (chip8.draw_flag) {
+            chip8_draw_display(&chip8);
+            chip8.draw_flag = 0;
+        }
+
         DrawText("Chip8 test window", 0, 0, 10, RED);
         EndDrawing();
     }
