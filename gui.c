@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <raylib.h>
+
 #include "chip8.h"
 
 #define PIXEL_HEIGHT 15

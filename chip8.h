@@ -7,6 +7,8 @@
 #define DISPLAY_WIDTH 64
 #define DISPLAY_HEIGHT 32
 
+#define KEYPAD_SIZE 16
+
 #define FONT_SET_SIZE 80
 #define FONT_SET_ADDRESS 0x50
 
@@ -31,7 +33,7 @@ typedef struct chip8_t {
     uint16_t opcode;
 
     uint16_t stack[16];
-    uint8_t SP;
+    int8_t SP;
 
     // 60Hz
     uint8_t DT; // delay timer
@@ -50,6 +52,7 @@ typedef struct chip8_t {
 typedef void (*op_table)(p_chip8_t chip8);
 extern op_table table[16]; // dispatcher
 extern const uint8_t chip8_font_set[FONT_SET_SIZE];
+extern const uint8_t keymap[16];
 
 // opcode handlers
 void op_0(p_chip8_t chip8);
@@ -71,7 +74,10 @@ void op_F(p_chip8_t chip8);
 
 void chip8_draw(p_chip8_t chip8, uint8_t x, uint8_t y, uint8_t n);
 bool chip8_load_rom(p_chip8_t chip8, const char *path);
-void chip8_step(p_chip8_t chip8); // change to emulate_cycle
+void chip8_step(p_chip8_t chip8);
 void chip8_init(p_chip8_t chip8);
+
+void chip8_push_stack(p_chip8_t chip8);
+uint16_t chip8_pop_stack(p_chip8_t chip8);
 
 #endif

@@ -1,0 +1,23 @@
+1. learn/implement cpu instruction/cycles timing
+2. add resources in readme
+3. add src directory and separate build folder for .gitignore
+
+
+in handling timing, time_step should be compared to dt instead of dt * cycles since we are measuing elapsed time so no need to multiply cycles or it will change unit (to cycles instead)
+
+time based accumulator:
+
+dt = frametime
+accumulator += dt
+while (accumulator >= time_step) <--- where time_step is the time one cycle takes to finish
+
+
+cycle based accumulator:
+dt = frametime
+accumulator += dt * cycles_per_second <--- aka frequency
+while (accumulator >= 1) <--- 1 for 1 tick/cycle
+
+
+https://www.youtube.com/watch?v=gCmdTOBSoMo ( Let's Dive into the Cycles, Speed, and Video Output Timing of the NES - Behind the Code )
+https://gafferongames.com/post/fix_your_timestep/
+https://vanhunteradams.com/FixedPoint/FixedPoint.html
