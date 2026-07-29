@@ -28,23 +28,36 @@ const uint8_t chip8_font_set[FONT_SET_SIZE] = {
 };
 
 const uint8_t keymap[16] = {
-    KEY_ONE, KEY_TWO, KEY_THREE, KEY_FOUR,
-    KEY_Q, KEY_W, KEY_E, KEY_R,
-    KEY_A, KEY_S, KEY_D, KEY_F,
-    KEY_Z, KEY_X, KEY_C, KEY_V,
+    [0x0] = KEY_X,
+    [0x1] = KEY_ONE,
+    [0x2] = KEY_TWO,
+    [0x3] = KEY_THREE,
+    [0x4] = KEY_Q,
+    [0x5] = KEY_W,
+    [0x6] = KEY_E,
+    [0x7] = KEY_A,
+    [0x8] = KEY_S,
+    [0x9] = KEY_D,
+    [0xA] = KEY_Z,
+    [0xB] = KEY_C,
+    [0xC] = KEY_FOUR,
+    [0xD] = KEY_R,
+    [0xE] = KEY_F,
+    [0xF] = KEY_V,
 };
 
 void op_0(p_chip8_t chip8)
 {
     switch(nn(chip8->opcode)) {
         case 0x00E0:
-            printf("disp_clear()\n");
+            // printf("disp_clear()\n");
             memset(chip8->display, 0, sizeof(chip8->display));
             chip8->draw_flag = 1;
             break;
         case 0x00EE:
             chip8->PC = chip8_pop_stack(chip8);
-            printf("return\n"); break;
+            break;
+            // printf("return\n"); break;
         default:
             printf("invalid 0xxx opcode\n");
     }
@@ -53,7 +66,7 @@ void op_0(p_chip8_t chip8)
 void op_1(p_chip8_t chip8) {
     uint16_t addr = nnn(chip8->opcode);
     chip8->PC = addr;
-    printf("goto nnn[%hx]\n", addr);
+    // printf("goto nnn[%hx]\n", addr);
 }
 
 void op_2(p_chip8_t chip8)
@@ -61,7 +74,7 @@ void op_2(p_chip8_t chip8)
     uint16_t addr = nnn(chip8->opcode);
     chip8_push_stack(chip8);
     chip8->PC = addr;
-    printf("call nnn[%hx]\n", addr);
+    // printf("call nnn[%hx]\n", addr);
 }
 
 void op_3(p_chip8_t chip8) // Vx == nn
@@ -70,7 +83,7 @@ void op_3(p_chip8_t chip8) // Vx == nn
     uint8_t nn = nn(chip8->opcode);
     if (chip8->V[x] == nn)
         chip8->PC += 2;
-    printf("if (Vx[%hhx] == nn[%hhx])\n", x, nn);
+    // printf("if (Vx[%hhx] == nn[%hhx])\n", x, nn);
 }
 
 void op_4(p_chip8_t chip8) // Vx != nn
@@ -79,7 +92,7 @@ void op_4(p_chip8_t chip8) // Vx != nn
     uint8_t nn = nn(chip8->opcode);
     if (chip8->V[x] != nn)
         chip8->PC += 2;
-    printf("if (Vx[%hhx] != nn[%hhx])\n", x, nn);
+    // printf("if (Vx[%hhx] != nn[%hhx])\n", x, nn);
 }
 
 void op_5(p_chip8_t chip8)
@@ -88,7 +101,7 @@ void op_5(p_chip8_t chip8)
     uint8_t y = y(chip8->opcode);
     if (chip8->V[x] == chip8->V[y])
         chip8->PC += 2;
-    printf("if (Vx[%hhx] == Vy[%hhx])\n", x, y);
+    // printf("if (Vx[%hhx] == Vy[%hhx])\n", x, y);
 }
 
 void op_6(p_chip8_t chip8)
@@ -96,14 +109,15 @@ void op_6(p_chip8_t chip8)
     uint8_t x = x(chip8->opcode);
     uint8_t nn = nn(chip8->opcode);
     chip8->V[x] = nn;
-    printf("Vx[%hhx] = nn[%hhx]\n", x, nn);
+    // printf("Vx[%hhx] = nn[%hhx]\n", x, nn);
 }
 
 void op_7(p_chip8_t chip8)
-{ uint8_t x = x(chip8->opcode);
+{
+    uint8_t x = x(chip8->opcode);
     uint8_t nn = nn(chip8->opcode);
     chip8->V[x] += nn;
-    printf("Vx[%hhx] += nn[%hhx]\n", x, nn);
+    // printf("Vx[%hhx] += nn[%hhx]\n", x, nn);
 }
 
 void op_8(p_chip8_t chip8)
@@ -115,30 +129,33 @@ void op_8(p_chip8_t chip8)
     switch (n(chip8->opcode)) {
         case 0x0:
             chip8->V[x] = chip8->V[y];
-            printf("Vx[%hhx] = Vy[%hhx]\n", x, y);
+            // printf("Vx[%hhx] = Vy[%hhx]\n", x, y);
             break;
         case 0x1:
             chip8->V[x] |= chip8->V[y];
-            printf("Vx[%hhx] |= Vy[%hhx]\n", x, y);
+            chip8->V[0xF] = 0;
+            // printf("Vx[%hhx] |= Vy[%hhx]\n", x, y);
             break;
         case 0x2:
             chip8->V[x] &= chip8->V[y];
-            printf("Vx[%hhx] &= Vy[%hhx]\n", x, y);
+            chip8->V[0xF] = 0;
+            // printf("Vx[%hhx] &= Vy[%hhx]\n", x, y);
             break;
         case 0x3:
             chip8->V[x] ^= chip8->V[y];
-            printf("Vx[%hhx] ^= Vy[%hhx]\n", x, y);
+            chip8->V[0xF] = 0;
+            // printf("Vx[%hhx] ^= Vy[%hhx]\n", x, y);
             break;
-        case 0x4:
+        case 0x4:;
             // handle VF overflow
             uint16_t sum = chip8->V[x] + chip8->V[y];
             if (sum > 0xFF)
                 temp = 1;
             else
                 temp = 0;
-            chip8->V[x] = sum;
+            chip8->V[x] += sum;
             chip8->V[0xF] = temp;
-            printf("Vx[%hhx] += Vy[%hhx]\n", x, y);
+            // printf("Vx[%hhx] += Vy[%hhx]\n", x, y);
             break;
         case 0x5:
             // handle VF underflow
@@ -153,10 +170,11 @@ void op_8(p_chip8_t chip8)
         case 0x6:
             // make this configurable
             // https://tobiasvl.github.io/blog/write-a-chip-8-emulator/#8xy6-and-8xye-shift
+            chip8->V[x] = chip8->V[y]; // <--- disable if not chip8
             temp = chip8->V[x] & 1;    // store lsb to VF
             chip8->V[x] >>= 1;
             chip8->V[0xF] = temp;
-            printf("Vx[%hhx] >>= 1", x);
+            // printf("Vx[%hhx] >>= 1", x);
             break;
         case 0x7:
             // handle VF underflow
@@ -166,15 +184,16 @@ void op_8(p_chip8_t chip8)
                 temp = 0;
             chip8->V[x] = chip8->V[y] - chip8->V[x];
             chip8->V[0xF] = temp;
-            printf("Vx[%hhx] = Vy[%hhx] - Vx[%hhx]\n", x, y, x);
+            // printf("Vx[%hhx] = Vy[%hhx] - Vx[%hhx]\n", x, y, x);
             break;
         case 0xE:
             // make this configurable
             // https://tobiasvl.github.io/blog/write-a-chip-8-emulator/#8xy6-and-8xye-shift
+            chip8->V[x] = chip8->V[y]; // <--- disable if not chip8
             temp = (chip8->V[x] & 0x80) >> 7;
             chip8->V[x] <<= 1;
             chip8->V[0xF] = temp;
-            printf("Vx[%hhx] <<= 1", x);
+            // printf("Vx[%hhx] <<= 1", x);
             break;
         default: printf("invalid 8xy0 opcode\n");
     }
@@ -186,22 +205,23 @@ void op_9(p_chip8_t chip8)
     uint8_t y = y(chip8->opcode);
     if (chip8->V[x] != chip8->V[y])
         chip8->PC +=2;
-    printf("if (Vx[%hhx] != Vy[%hhx])\n", x, y);
+    // printf("if (Vx[%hhx] != Vy[%hhx])\n", x, y);
 }
 
 void op_A(p_chip8_t chip8)
 {
     uint16_t addr = nnn(chip8->opcode);
     chip8->I = addr;
-    printf("I = nnn[%hx]\n", addr);
+    // printf("I = nnn[%hx]\n", addr);
 }
 
 // make this configurable
 void op_B(p_chip8_t chip8)
 {
+    uint8_t x = x(chip8->opcode);
     uint16_t addr = nnn(chip8->opcode);
     chip8->PC = addr + chip8->V[0];
-    printf("PC[%hx] = V0[%hhx] + nnn[%hx]\n", chip8->PC, chip8->V[0], addr);
+    // printf("PC[%hx] = V0[%hhx] + nnn[%hx]\n", chip8->PC, chip8->V[0], addr);
 }
 
 void op_C(p_chip8_t chip8) // rand()
@@ -209,7 +229,7 @@ void op_C(p_chip8_t chip8) // rand()
     uint8_t x = x(chip8->opcode);
     uint8_t nn = nn(chip8->opcode);
     chip8->V[x] = (rand() % 255) & nn;
-    printf("Vx[%hhx] = rand() & nn[%hhx]\n", x, nn);
+    // printf("Vx[%hhx] = rand() & nn[%hhx]\n", x, nn);
 }
 
 void op_D(p_chip8_t chip8) // draw()
@@ -218,7 +238,11 @@ void op_D(p_chip8_t chip8) // draw()
     uint8_t y = y(chip8->opcode);
     uint8_t n = n(chip8->opcode);
     chip8_draw(chip8, chip8->V[x] % DISPLAY_WIDTH, chip8->V[y] % DISPLAY_HEIGHT, n);
-    printf("draw(Vx[%hhx], Vy[%hhx], nn[%hhx])\n", x, y, n);
+    // printf("draw(Vx[%hhx], Vy[%hhx], nn[%hhx])\n", x, y, n);
+    // debug
+    // printf("registers: x=%hhx y=%hhx--", x, y);
+    // printf("values: Vx=%hhx Vy=%hhx--", chip8->V[x], chip8->V[y]);
+    // printf("wrapped: x=%hhx y=%hhx\n", chip8->V[x] % DISPLAY_WIDTH, chip8->V[y] % DISPLAY_HEIGHT);
 }
 
 void op_E(p_chip8_t chip8) // key()
@@ -228,12 +252,12 @@ void op_E(p_chip8_t chip8) // key()
         case 0x9E:
             if (chip8->key[(chip8->V[x] & 0x0F)])
                 chip8->PC += 2;
-            printf("if (key() == Vx[%hhx]\n", x);
+            // printf("if (key() == Vx[%hhx]\n", x);
             break;
         case 0xA1:
             if (!chip8->key[(chip8->V[x] & 0x0F)])
                 chip8->PC +=2;
-            printf("if (key() != Vx[%hhx]\n", x);
+            // printf("if (key() != Vx[%hhx]\n", x);
             break;
         default:
             printf("invalid Ex00 opcode\n");
@@ -246,56 +270,57 @@ void op_F(p_chip8_t chip8)
     switch (nn(chip8->opcode)) {
         case 0x07:
             chip8->V[x] = chip8->DT;
-            printf("Vx[%hhx] = get_delay()\n", x);
+            // printf("Vx[%hhx] = get_delay()\n", x);
             break; // get_delay()
         case 0x0A:
             // i think this is a bug lol
-            // debug this shit, make sure key_pressed array is working correctly
+            // debug this shit, make sure prev_key array is working correctly
             for (int i = 0; i < KEYPAD_SIZE; i++) {
-                if  (!chip8->key[i] && chip8->key_pressed[i]) {
+                if (!chip8->key[i] && chip8->prev_key[i]) {
                     chip8->V[x] = i;
-                    printf("Vx[%hhx] = get_key()\n", x);
-                    break;
+                    return;
                 }
             }
             chip8->PC -= 2;
             break; // get_key()
         case 0x15:
             chip8->DT = chip8->V[x];
-            printf("DT = Vx[%hhx]\n", x);
+            // printf("DT = Vx[%hhx]\n", x);
             break; // delay_timer = Vx
         case 0x18:
             chip8->ST = chip8->V[x];
-            printf("ST = Vx[%hhx]\n", x);
+            // printf("ST = Vx[%hhx]\n", x);
             break; // sound_timer = Vx
         case 0x1E:
             chip8->I += chip8->V[x];
-            printf("I += Vx[%hhx]\n", x);
+            // printf("I += Vx[%hhx]\n", x);
             break; // I += Vx
         case 0x29:
             // this could bug lol
             chip8->I = FONT_SET_ADDRESS + ((chip8->V[x] & 0x0F) * 5);
-            printf("I = sprite_addr[Vx[%hhx]]\n", x);
+            // printf("I = sprite_addr[Vx[%hhx]]\n", x);
             break; 
         case 0x33:
             chip8->mem[chip8->I + 2] = chip8->V[x] % 10;            // ones
             chip8->mem[chip8->I + 1] = (chip8->V[x] % 100) / 10;    // tens
             chip8->mem[chip8->I]     = chip8->V[x] / 100;           // hundreds
-            printf("BCD stuff\n");
+            // printf("BCD stuff\n");
             break; // BCD
         case 0x55:
             // check if correct
             for (int i = 0; i <= x; i++) {
-                chip8->mem[chip8->I + i] = chip8->V[i];
+                chip8->mem[chip8->I] = chip8->V[i];
+                chip8->I++;
             }
-            printf("reg_dump(Vx[%hhx], &I\n", x);
+            // printf("reg_dump(Vx[%hhx], &I\n", x);
             break;
         case 0x65:
             // check if correct
             for (int i = 0; i <= x; i++) {
-                chip8->V[i] = chip8->mem[chip8->I + i];
+                chip8->V[i] = chip8->mem[chip8->I];
+                chip8->I++;
             }
-            printf("reg_load(Vx[%hhx], &I\n", x);
+            // printf("reg_load(Vx[%hhx], &I\n", x);
             break;
         default: printf("invalid FX00 opcode\n");
     }
@@ -315,11 +340,15 @@ void chip8_draw(p_chip8_t chip8, uint8_t x, uint8_t y, uint8_t sprite_height)
     for (int n = 0; n < sprite_height; n++) {
         uint8_t pixel = chip8->mem[chip8->I + n];
         for (int bit_col = 0; bit_col < 8; bit_col++) {       // bit_col = 1 byte / 8 bit
+            uint8_t y_screen = y + n;
+            uint8_t x_screen = x + bit_col;
+            if (y_screen >= DISPLAY_HEIGHT || x_screen >= DISPLAY_WIDTH)
+                continue;
             // 0xF0 == 0b10000000 >> bit_col -> bit_col mov from msb to lsb per iteration
             if ((pixel & (0x80 >> bit_col)) != 0) {
-                if (chip8->display[((y + n) * DISPLAY_WIDTH) + x + bit_col] == 1) // if collision
+                if (chip8->display[((y_screen) * DISPLAY_WIDTH) + (x_screen)] == 1) // if collision
                     chip8->V[0xF] = 1;
-                chip8->display[((y + n) * DISPLAY_WIDTH) + x + bit_col] ^= 1; // flip the pixel
+                chip8->display[((y_screen) * DISPLAY_WIDTH) + (x_screen)] ^= 1; // flip the pixel
             }
         }
     }
@@ -367,17 +396,22 @@ cleanup:
     return retval;
 }
 
-void chip8_step(p_chip8_t chip8)
+void chip8_step_cpu(p_chip8_t chip8)
 {
     // fetch/decode opcodes
     chip8->opcode = (chip8->mem[chip8->PC] << 8) | chip8->mem[chip8->PC + 1];
-    printf("%hx\t%hx\t --> ", chip8->PC, chip8->opcode);
+    //printf("%hx\t%hx\t --> ", chip8->PC, chip8->opcode);
     //
-    if (chip8->PC > MAX_ROM_SIZE) exit(66);
+    //if (chip8->PC > MAX_ROM_SIZE) exit(66);
     //
     chip8->PC += 2;
     //execute
     table[msn(chip8->opcode)](chip8);
+}
+
+void chip8_step_timer(p_chip8_t chip8, double dt)
+{
+
 }
 
 void chip8_init(p_chip8_t chip8)
@@ -397,7 +431,7 @@ void chip8_init(p_chip8_t chip8)
     chip8->ST = 0; // sound timer
     
     memset(chip8->key, 0, sizeof(chip8->key));
-    memset(chip8->key_pressed, 0, sizeof(chip8->key_pressed));
+    memset(chip8->prev_key, 0, sizeof(chip8->prev_key));
     memset(chip8->display, 0, sizeof(chip8->display));
     memcpy(chip8->mem + FONT_SET_ADDRESS, chip8_font_set, FONT_SET_SIZE); // load font set at 0x50
     chip8->draw_flag = false;
@@ -425,24 +459,9 @@ uint16_t chip8_pop_stack(p_chip8_t chip8)
 
 void get_key(p_chip8_t chip8)
 {
-    int key = GetKeyPressed();
-
-    // TODO quit, reload, load, pause, single-step, breakpoint at current selected line/clicked
-
-    // set key
     for (int i = 0; i < KEYPAD_SIZE; i++) {
-        if (key == keymap[i]) {
-            chip8->key[i] = 1;
-            chip8->key_pressed[i] = 1;
-            break; // detect only the first key (idk if this is right) or it just make it a bit efficient idk
-        }
-    }
-
-    // unset key
-    for (int i = 0; i < KEYPAD_SIZE; i++) {
-        if (IsKeyUp(keymap[i])) {
-            chip8->key[i] = 0;
-        }
+        chip8->prev_key[i] = chip8->key[i];
+        chip8->key[i] = IsKeyDown(keymap[i]);
     }
 }
 
