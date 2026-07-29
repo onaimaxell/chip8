@@ -43,6 +43,7 @@ void op_0(p_chip8_t chip8)
             chip8->draw_flag = 1;
             break;
         case 0x00EE:
+            chip8->PC = chip8_pop_stack(chip8);
             printf("return\n"); break;
         default:
             printf("invalid 0xxx opcode\n");
@@ -58,52 +59,52 @@ void op_1(p_chip8_t chip8) {
 void op_2(p_chip8_t chip8)
 {
     uint16_t addr = nnn(chip8->opcode);
-    printf("call nnn[%hx]\n", addr);
     chip8_push_stack(chip8);
     chip8->PC = addr;
+    printf("call nnn[%hx]\n", addr);
 }
 
 void op_3(p_chip8_t chip8) // Vx == nn
 {
     uint8_t x = x(chip8->opcode);
     uint8_t nn = nn(chip8->opcode);
-    printf("if (Vx[%hhx] == nn[%hhx])\n", x, nn);
     if (chip8->V[x] == nn)
         chip8->PC += 2;
+    printf("if (Vx[%hhx] == nn[%hhx])\n", x, nn);
 }
 
 void op_4(p_chip8_t chip8) // Vx != nn
 {
     uint8_t x = x(chip8->opcode);
     uint8_t nn = nn(chip8->opcode);
-    printf("if (Vx[%hhx] != nn[%hhx])\n", x, nn);
     if (chip8->V[x] != nn)
         chip8->PC += 2;
+    printf("if (Vx[%hhx] != nn[%hhx])\n", x, nn);
 }
 
 void op_5(p_chip8_t chip8)
 {
     uint8_t x = x(chip8->opcode);
     uint8_t y = y(chip8->opcode);
-    printf("if (Vx[%hhx] == Vy[%hhx])\n", x, y);
     if (chip8->V[x] == chip8->V[y])
         chip8->PC += 2;
+    printf("if (Vx[%hhx] == Vy[%hhx])\n", x, y);
 }
 
 void op_6(p_chip8_t chip8)
 {
     uint8_t x = x(chip8->opcode);
     uint8_t nn = nn(chip8->opcode);
-    printf("Vx[%hhx] = nn[%hhx]\n", x, nn);
     chip8->V[x] = nn;
+    printf("Vx[%hhx] = nn[%hhx]\n", x, nn);
 }
 
 void op_7(p_chip8_t chip8)
 {
     uint8_t x = x(chip8->opcode);
     uint8_t nn = nn(chip8->opcode);
-    printf("Vx[%hhx] += nn[%hhx]\n", x, nn);
     chip8->V[x] += nn;
+    printf("Vx[%hhx] += nn[%hhx]\n", x, nn);
 }
 
 void op_8(p_chip8_t chip8)
@@ -225,8 +226,16 @@ void op_F(p_chip8_t chip8)
             printf("Vx[%hhx] = get_delay()\n", x);
             break; // get_delay()
         case 0x0A:
-
-            printf("Vx[%hhx] = get_key()\n", x);
+            // i think this is a bug lol
+            // debug this shit, make sure key_pressed array is working correctly
+            for (int i = 0; i < KEYPAD_SIZE; i++) {
+                if (!chip8->key[i] && chip8->key_pressed[i]) {
+                    chip8->V[x] = i;
+                    printf("Vx[%hhx] = get_key()\n", x);
+                    break;
+                }
+            }
+            chip8->PC -= 2;
             break; // get_key()
         case 0x15:
             chip8->DT = chip8->V[x];
@@ -242,16 +251,27 @@ void op_F(p_chip8_t chip8)
             break; // I += Vx
         case 0x29:
             // this could bug lol
-            chip8->I = (FONT_SET_ADDRESS + (chip8->V[x] & 0x0F));
+            chip8->I = FONT_SET_ADDRESS + ((chip8->V[x] & 0x0F) * 5);
             printf("I = sprite_addr[Vx[%hhx]]\n", x);
             break; 
         case 0x33:
+            chip8->mem[chip8->I + 2] = chip8->V[x] % 10;            // ones
+            chip8->mem[chip8->I + 1] = (chip8->V[x] % 100) / 10;    // tens
+            chip8->mem[chip8->I]     = chip8->V[x] / 100;           // hundreds
             printf("BCD stuff\n");
             break; // BCD
         case 0x55:
+            // check if correct
+            for (int i = 0; i <= x; i++) {
+                chip8->mem[chip8->I + i] = chip8->V[i];
+            }
             printf("reg_dump(Vx[%hhx], &I\n", x);
             break;
         case 0x65:
+            // check if correct
+            for (int i = 0; i <= x; i++) {
+                chip8->V[i] = chip8->mem[chip8->I + i];
+            }
             printf("reg_load(Vx[%hhx], &I\n", x);
             break;
         default: printf("invalid FX00 opcode\n");
@@ -309,7 +329,7 @@ bool chip8_load_rom(p_chip8_t chip8, const char *path)
     }
 
     // for loading new ROM during execution
-    // memset(chip8->mem + ROM_START_ADDRESS, 0, RAM_SIZE - ROM_START_ADDRESS);
+    // memset(chip8->mem + ROM_START_ADDRESS, 0, MAX_ROM_SIZE);
 
     size_t rbytes= fread(chip8->mem + ROM_START_ADDRESS, 1, rom_size, f);
     if (rbytes != (size_t) rom_size) {
@@ -354,9 +374,9 @@ void chip8_init(p_chip8_t chip8)
     chip8->ST = 0; // sound timer
     
     memset(chip8->key, 0, sizeof(chip8->key));
+    memset(chip8->key_pressed, 0, sizeof(chip8->key_pressed));
     memset(chip8->display, 0, sizeof(chip8->display));
     memcpy(chip8->mem + FONT_SET_ADDRESS, chip8_font_set, FONT_SET_SIZE); // load font set at 0x50
-    chip8->key_pressed = false;
     chip8->draw_flag = false;
     srand(time(NULL));  // seed the rng
 }
@@ -388,9 +408,11 @@ void get_key(p_chip8_t chip8)
 
     // set key
     for (int i = 0; i < KEYPAD_SIZE; i++) {
-        if (key == keymap[i])
+        if (key == keymap[i]) {
             chip8->key[i] = 1;
-
+            chip8->key_pressed[i] = 1;
+            break; // detect only the first key (idk if this is right) or it just make it a bit efficient idk
+        }
     }
 
     // unset key

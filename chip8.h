@@ -44,7 +44,7 @@ typedef struct chip8_t {
 
     // keypad
     uint8_t key[16];
-    bool key_pressed;
+    bool key_pressed[16];
 
     bool draw_flag;
 } chip8_t, *p_chip8_t;
@@ -79,5 +79,6 @@ void chip8_init(p_chip8_t chip8);
 
 void chip8_push_stack(p_chip8_t chip8);
 uint16_t chip8_pop_stack(p_chip8_t chip8);
+void get_key(p_chip8_t chip8);
 
 #endif

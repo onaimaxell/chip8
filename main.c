@@ -28,7 +28,7 @@ int main(int argc, char **argv)
     printf("loaded rom: %s\n", argv[1]);
 
     // 700 cycles / sec
-    double cycles = 500;
+    double cycles = 700;
     double time_step = 1 / cycles; // duration of each cycle
     double cpu_accumulator = 0;
 
@@ -44,11 +44,13 @@ int main(int argc, char **argv)
         while (cpu_accumulator >= time_step) {
             chip8_step(&chip8);
             cpu_accumulator -= time_step;
-            if (chip8.draw_flag) {
-                chip8_draw_display(&chip8);
-                chip8.draw_flag = 0;
-            }
         }
+
+        if (chip8.draw_flag) {
+            chip8_draw_display(&chip8);
+            chip8.draw_flag = 0;
+        }
+
         DrawText("Chip8 test window", 0, 0, 10, RED);
         EndDrawing();
     }
