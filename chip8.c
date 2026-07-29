@@ -100,8 +100,7 @@ void op_6(p_chip8_t chip8)
 }
 
 void op_7(p_chip8_t chip8)
-{
-    uint8_t x = x(chip8->opcode);
+{ uint8_t x = x(chip8->opcode);
     uint8_t nn = nn(chip8->opcode);
     chip8->V[x] += nn;
     printf("Vx[%hhx] += nn[%hhx]\n", x, nn);
@@ -111,6 +110,7 @@ void op_8(p_chip8_t chip8)
 {
     uint8_t x = x(chip8->opcode);
     uint8_t y = y(chip8->opcode);
+    uint8_t temp = 0;   // for vx edge cases
 
     switch (n(chip8->opcode)) {
         case 0x0:
@@ -131,26 +131,49 @@ void op_8(p_chip8_t chip8)
             break;
         case 0x4:
             // handle VF overflow
-            chip8->V[x] += chip8->V[y];
+            uint16_t sum = chip8->V[x] + chip8->V[y];
+            if (sum > 0xFF)
+                temp = 1;
+            else
+                temp = 0;
+            chip8->V[x] = sum;
+            chip8->V[0xF] = temp;
             printf("Vx[%hhx] += Vy[%hhx]\n", x, y);
             break;
         case 0x5:
+            // handle VF underflow
+            if (chip8->V[x] >= chip8->V[y])
+                temp = 1;
+            else
+                temp = 0;
+
             chip8->V[x] -= chip8->V[y];
-            printf("Vx[%hhx] -= Vy[%hhx]\n", x, y);
+            chip8->V[0xF] = temp;
             break;
         case 0x6:
             // make this configurable
+            // https://tobiasvl.github.io/blog/write-a-chip-8-emulator/#8xy6-and-8xye-shift
+            temp = chip8->V[x] & 1;    // store lsb to VF
             chip8->V[x] >>= 1;
+            chip8->V[0xF] = temp;
             printf("Vx[%hhx] >>= 1", x);
             break;
         case 0x7:
-            // handle VF overflow
+            // handle VF underflow
+            if (chip8->V[y] >= chip8->V[x])
+                temp = 1;
+            else
+                temp = 0;
             chip8->V[x] = chip8->V[y] - chip8->V[x];
+            chip8->V[0xF] = temp;
             printf("Vx[%hhx] = Vy[%hhx] - Vx[%hhx]\n", x, y, x);
             break;
         case 0xE:
             // make this configurable
+            // https://tobiasvl.github.io/blog/write-a-chip-8-emulator/#8xy6-and-8xye-shift
+            temp = (chip8->V[x] & 0x80) >> 7;
             chip8->V[x] <<= 1;
+            chip8->V[0xF] = temp;
             printf("Vx[%hhx] <<= 1", x);
             break;
         default: printf("invalid 8xy0 opcode\n");
@@ -229,7 +252,7 @@ void op_F(p_chip8_t chip8)
             // i think this is a bug lol
             // debug this shit, make sure key_pressed array is working correctly
             for (int i = 0; i < KEYPAD_SIZE; i++) {
-                if (!chip8->key[i] && chip8->key_pressed[i]) {
+                if  (!chip8->key[i] && chip8->key_pressed[i]) {
                     chip8->V[x] = i;
                     printf("Vx[%hhx] = get_key()\n", x);
                     break;

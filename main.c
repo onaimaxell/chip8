@@ -36,6 +36,7 @@ int main(int argc, char **argv)
     while (!WindowShouldClose()) {
         double dt = GetFrameTime();
         cpu_accumulator += dt;
+        get_key(&chip8);
         // update var here
 
         BeginDrawing();
